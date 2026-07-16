@@ -5,7 +5,7 @@
 > **Scope**: 构建、启动、健康、备份、升级与回滚  
 > **Last verified**: 2026-07-17 against working tree  
 > **Owners**: TuDNS maintainers  
-> **Related docs**: [部署](../DEPLOY.md)、[故障排查](troubleshooting.md)
+> **Related docs**: [部署](deploy.md)、[故障排查](troubleshooting.md)
 
 <cite>
 **Files Referenced in This Document**
@@ -88,7 +88,7 @@ flowchart TB
 - [router.go](file://internal/server/router.go) - line range not verified
 
 **Section Sources**
-- [DEPLOY.md](file://DEPLOY.md) - line range not verified
+- [deploy.md](file://deploy.md) - line range not verified
 
 ## Detailed Component Analysis
 
@@ -106,7 +106,7 @@ flowchart TB
 
 ## Configuration and Operations
 
-构建、启动、备份、升级和回滚的命令见 [DEPLOY.md](../DEPLOY.md)。升级涉及 GORM 模型时必须先备份；主密钥轮换不可直接替换配置值，需先迁移所有受其保护的数据。
+构建、启动、备份、升级和回滚的命令见 [deploy.md](deploy.md)。升级涉及 GORM 模型时必须先备份；主密钥轮换不可直接替换配置值，需先迁移所有受其保护的数据。
 
 **Section Sources**
 - [db.go](file://internal/db/db.go) - line range not verified
@@ -117,7 +117,7 @@ flowchart TB
 以非 root 专用账号运行，限制数据目录和配置读取权限，数据库走私网/TLS，前置 HTTPS 代理，Provider 使用最小权限。不要在探针或日志中输出密钥。
 
 **Section Sources**
-- [ENV_VARS.md](file://ENV_VARS.md) - line range not verified
+- [env-vars.md](file://env-vars.md) - line range not verified
 
 ## Observability and Troubleshooting
 
@@ -138,4 +138,4 @@ flowchart TB
 单二进制简化了交付，但生产稳定性仍依赖配置保护、数据库恢复、第三方对账和外部监控。
 
 **Section Sources**
-- [DEPLOY.md](file://DEPLOY.md) - line range not verified
+- [deploy.md](file://deploy.md) - line range not verified

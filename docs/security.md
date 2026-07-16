@@ -5,7 +5,7 @@
 > **Scope**: 认证、授权、密钥、输入边界和已知风险  
 > **Last verified**: 2026-07-17 against working tree  
 > **Owners**: TuDNS maintainers  
-> **Related docs**: [安全策略](../SECURITY.md)、[部署](../DEPLOY.md)
+> **Related docs**: [安全策略](../SECURITY.md)、[部署](deploy.md)
 
 <cite>
 **Files Referenced in This Document**

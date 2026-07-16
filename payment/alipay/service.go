@@ -18,7 +18,7 @@ import (
 
 	"tudns/models"
 	"tudns/points"
-	"tudns/settings"
+	"tudns/config"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -41,10 +41,10 @@ type Config struct {
 type Service struct {
 	db       *gorm.DB
 	points   *points.Service
-	settings *settings.Service
+	settings *config.SettingsStore
 }
 
-func NewService(db *gorm.DB, pointsSvc *points.Service, settingsSvc *settings.Service) *Service {
+func NewService(db *gorm.DB, pointsSvc *points.Service, settingsSvc *config.SettingsStore) *Service {
 	return &Service{db: db, points: pointsSvc, settings: settingsSvc}
 }
 

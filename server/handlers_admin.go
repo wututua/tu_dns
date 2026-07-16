@@ -7,9 +7,9 @@ import (
 	"tudns/admin"
 	"tudns/auth"
 	"tudns/domain"
-	"tudns/middleware"
+
 	"tudns/payment/alipay"
-	"tudns/response"
+
 
 	"github.com/gin-gonic/gin"
 )
@@ -18,29 +18,29 @@ func (a *App) handleAdminUsers(c *gin.Context) {
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	items, total, err := a.admin.ListUsers(page, 20)
 	if err != nil {
-		response.ServerError(c, err.Error())
+		ServerError(c, err.Error())
 		return
 	}
 	views := make([]auth.UserView, 0, len(items))
 	for i := range items {
 		views = append(views, auth.ToUserView(&items[i]))
 	}
-	response.OK(c, gin.H{"items": views, "total": total, "page": page})
+	OK(c, gin.H{"items": views, "total": total, "page": page})
 }
 
 func (a *App) handleAdminUpdateUser(c *gin.Context) {
 	id, _ := strconv.ParseUint(c.Param("id"), 10, 64)
 	var req admin.UpdateUserInput
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "参数错误")
+		BadRequest(c, "参数错误")
 		return
 	}
 	u, err := a.admin.UpdateUser(uint(id), req)
 	if err != nil {
-		response.BadRequest(c, err.Error())
+		BadRequest(c, err.Error())
 		return
 	}
-	response.OK(c, auth.ToUserView(u))
+	OK(c, auth.ToUserView(u))
 }
 
 func (a *App) handleAdminAdjustPoints(c *gin.Context) {
@@ -50,15 +50,15 @@ func (a *App) handleAdminAdjustPoints(c *gin.Context) {
 		Remark string `json:"remark"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "参数错误")
+		BadRequest(c, "参数错误")
 		return
 	}
-	u, err := a.admin.AdjustPoints(middleware.CurrentUserID(c), uint(id), req.Delta, req.Remark)
+	u, err := a.admin.AdjustPoints(CurrentUserID(c), uint(id), req.Delta, req.Remark)
 	if err != nil {
-		response.BadRequest(c, err.Error())
+		BadRequest(c, err.Error())
 		return
 	}
-	response.OK(c, auth.ToUserView(u))
+	OK(c, auth.ToUserView(u))
 }
 
 func (a *App) handleAdminResetPassword(c *gin.Context) {
@@ -67,23 +67,23 @@ func (a *App) handleAdminResetPassword(c *gin.Context) {
 		Password string `json:"password"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "参数错误")
+		BadRequest(c, "参数错误")
 		return
 	}
 	if err := a.admin.ResetPassword(uint(id), req.Password); err != nil {
-		response.BadRequest(c, err.Error())
+		BadRequest(c, err.Error())
 		return
 	}
-	response.OK(c, gin.H{"ok": true})
+	OK(c, gin.H{"ok": true})
 }
 
 func (a *App) handleAdminDomains(c *gin.Context) {
 	items, err := a.domain.ListAll()
 	if err != nil {
-		response.ServerError(c, err.Error())
+		ServerError(c, err.Error())
 		return
 	}
-	response.OK(c, items)
+	OK(c, items)
 }
 
 func (a *App) handleAdminSaveDomain(c *gin.Context) {
@@ -94,24 +94,24 @@ func (a *App) handleAdminSaveDomain(c *gin.Context) {
 	}
 	var req domain.SaveInput
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "参数错误")
+		BadRequest(c, "参数错误")
 		return
 	}
 	d, err := a.domain.Save(id, req)
 	if err != nil {
-		response.BadRequest(c, err.Error())
+		BadRequest(c, err.Error())
 		return
 	}
-	response.OK(c, d)
+	OK(c, d)
 }
 
 func (a *App) handleAdminDeleteDomain(c *gin.Context) {
 	id, _ := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err := a.domain.Delete(uint(id)); err != nil {
-		response.BadRequest(c, err.Error())
+		BadRequest(c, err.Error())
 		return
 	}
-	response.OK(c, gin.H{"ok": true})
+	OK(c, gin.H{"ok": true})
 }
 
 func (a *App) handleAdminDNSCheck(c *gin.Context) {
@@ -120,14 +120,14 @@ func (a *App) handleAdminDNSCheck(c *gin.Context) {
 		Config      map[string]string `json:"config"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "参数错误")
+		BadRequest(c, "参数错误")
 		return
 	}
 	if err := a.domain.CheckProvider(c.Request.Context(), req.ProviderKey, req.Config); err != nil {
-		response.BadRequest(c, err.Error())
+		BadRequest(c, err.Error())
 		return
 	}
-	response.OK(c, gin.H{"ok": true})
+	OK(c, gin.H{"ok": true})
 }
 
 func (a *App) handleAdminDNSZones(c *gin.Context) {
@@ -136,62 +136,62 @@ func (a *App) handleAdminDNSZones(c *gin.Context) {
 		Config      map[string]string `json:"config"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "参数错误")
+		BadRequest(c, "参数错误")
 		return
 	}
 	zones, err := a.domain.ListZones(c.Request.Context(), req.ProviderKey, req.Config)
 	if err != nil {
-		response.BadRequest(c, err.Error())
+		BadRequest(c, err.Error())
 		return
 	}
-	response.OK(c, zones)
+	OK(c, zones)
 }
 
 func (a *App) handleAdminSubdomains(c *gin.Context) {
 	items, err := a.record.ListSubdomains(0)
 	if err != nil {
-		response.ServerError(c, err.Error())
+		ServerError(c, err.Error())
 		return
 	}
-	response.OK(c, items)
+	OK(c, items)
 }
 
 func (a *App) handleAdminRecords(c *gin.Context) {
 	items, err := a.record.ListAll()
 	if err != nil {
-		response.ServerError(c, err.Error())
+		ServerError(c, err.Error())
 		return
 	}
-	response.OK(c, items)
+	OK(c, items)
 }
 
 func (a *App) handleAdminPoints(c *gin.Context) {
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	items, total, err := a.points.List(0, page, 20)
 	if err != nil {
-		response.ServerError(c, err.Error())
+		ServerError(c, err.Error())
 		return
 	}
-	response.OK(c, gin.H{"items": items, "total": total, "page": page})
+	OK(c, gin.H{"items": items, "total": total, "page": page})
 }
 
 func (a *App) handleAdminLogs(c *gin.Context) {
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	items, total, err := a.admin.ListLogs(page, 20)
 	if err != nil {
-		response.ServerError(c, err.Error())
+		ServerError(c, err.Error())
 		return
 	}
-	response.OK(c, gin.H{"items": items, "total": total, "page": page})
+	OK(c, gin.H{"items": items, "total": total, "page": page})
 }
 
 func (a *App) handleAdminListRedeem(c *gin.Context) {
 	items, err := a.redeem.List()
 	if err != nil {
-		response.ServerError(c, err.Error())
+		ServerError(c, err.Error())
 		return
 	}
-	response.OK(c, items)
+	OK(c, items)
 }
 
 func (a *App) handleAdminCreateRedeem(c *gin.Context) {
@@ -201,54 +201,54 @@ func (a *App) handleAdminCreateRedeem(c *gin.Context) {
 		ExpiresAt string `json:"expires_at"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "参数错误")
+		BadRequest(c, "参数错误")
 		return
 	}
 	var exp *time.Time
 	if req.ExpiresAt != "" {
 		t, err := time.Parse(time.RFC3339, req.ExpiresAt)
 		if err != nil {
-			response.BadRequest(c, "过期时间格式错误")
+			BadRequest(c, "过期时间格式错误")
 			return
 		}
 		exp = &t
 	}
 	item, err := a.redeem.Create(req.Points, req.MaxUses, exp)
 	if err != nil {
-		response.BadRequest(c, err.Error())
+		BadRequest(c, err.Error())
 		return
 	}
-	response.OK(c, item)
+	OK(c, item)
 }
 
 func (a *App) handleAdminGetSettings(c *gin.Context) {
 	m, err := a.settings.GetAll()
 	if err != nil {
-		response.ServerError(c, err.Error())
+		ServerError(c, err.Error())
 		return
 	}
-	response.OK(c, m)
+	OK(c, m)
 }
 
 func (a *App) handleAdminSaveSettings(c *gin.Context) {
 	var req map[string]string
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "参数错误")
+		BadRequest(c, "参数错误")
 		return
 	}
 	for k, v := range req {
 		if err := a.settings.Set(k, v); err != nil {
-			response.ServerError(c, err.Error())
+			ServerError(c, err.Error())
 			return
 		}
 	}
-	response.OK(c, gin.H{"ok": true})
+	OK(c, gin.H{"ok": true})
 }
 
 func (a *App) handleAdminGetAlipay(c *gin.Context) {
 	cfg, err := a.alipay.LoadConfig()
 	if err != nil {
-		response.ServerError(c, err.Error())
+		ServerError(c, err.Error())
 		return
 	}
 	if cfg.PrivateKey != "" {
@@ -257,13 +257,13 @@ func (a *App) handleAdminGetAlipay(c *gin.Context) {
 	if cfg.PublicKey != "" {
 		cfg.PublicKey = "***"
 	}
-	response.OK(c, cfg)
+	OK(c, cfg)
 }
 
 func (a *App) handleAdminSaveAlipay(c *gin.Context) {
 	var cfg alipay.Config
 	if err := c.ShouldBindJSON(&cfg); err != nil {
-		response.BadRequest(c, "参数错误")
+		BadRequest(c, "参数错误")
 		return
 	}
 	old, _ := a.alipay.LoadConfig()
@@ -274,17 +274,17 @@ func (a *App) handleAdminSaveAlipay(c *gin.Context) {
 		cfg.PublicKey = old.PublicKey
 	}
 	if err := a.alipay.SaveConfig(&cfg); err != nil {
-		response.ServerError(c, err.Error())
+		ServerError(c, err.Error())
 		return
 	}
-	response.OK(c, gin.H{"ok": true})
+	OK(c, gin.H{"ok": true})
 }
 
 func (a *App) handleAdminOrders(c *gin.Context) {
 	items, err := a.alipay.ListOrders(0)
 	if err != nil {
-		response.ServerError(c, err.Error())
+		ServerError(c, err.Error())
 		return
 	}
-	response.OK(c, items)
+	OK(c, items)
 }

@@ -67,7 +67,7 @@ npm run dev
 ./scripts/build.ps1
 ```
 
-脚本先把前端构建到 `internal/webembed/dist/`，再输出 `bin/tudns` 或 `bin/tudns.exe`。完整步骤见 [安装文档](INSTALL.md) 和 [部署文档](DEPLOY.md)。
+脚本先把前端构建到 `internal/webembed/dist/`，再输出 `bin/tudns` 或 `bin/tudns.exe`。完整步骤见 [安装文档](docs/install.md) 和 [部署文档](docs/deploy.md)。
 
 ## 配置
 
@@ -81,7 +81,7 @@ app:
   data_dir: data
 ```
 
-完整字段见 [配置文档](ENV_VARS.md)。真实配置、运行数据和数据库文件已由 `.gitignore` 排除。
+完整字段见 [配置文档](docs/env-vars.md)。真实配置、运行数据和数据库文件已由 `.gitignore` 排除。
 
 ## 项目结构
 
@@ -104,12 +104,12 @@ app:
 
 ## 文档
 
-- [安装](INSTALL.md)
-- [使用](USAGE.md)
-- [API](API.md)
-- [部署与回滚](DEPLOY.md)
-- [配置与环境变量](ENV_VARS.md)
-- [特殊环境说明](SPECIAL_ENV.md)
+- [安装](docs/install.md)
+- [使用](docs/usage.md)
+- [API](docs/api.md)
+- [部署与回滚](docs/deploy.md)
+- [配置与环境变量](docs/env-vars.md)
+- [特殊环境说明](docs/special-env.md)
 - [文档索引](docs/README.md)
 - [贡献指南](CONTRIBUTING.md)
 - [安全策略](SECURITY.md)

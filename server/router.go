@@ -13,13 +13,13 @@ import (
 	_ "tudns/dns/providers"
 	"tudns/domain"
 	"tudns/install"
-	"tudns/middleware"
+
 	"tudns/payment/alipay"
 	"tudns/points"
 	"tudns/record"
 	"tudns/redeem"
-	"tudns/response"
-	"tudns/settings"
+
+
 	"tudns/webembed"
 
 	"github.com/gin-gonic/gin"
@@ -38,7 +38,7 @@ type App struct {
 	redeem   *redeem.Service
 	alipay   *alipay.Service
 	admin    *admin.Service
-	settings *settings.Service
+	settings *config.SettingsStore
 }
 
 func NewApp(cfg *config.Config, gdb *gorm.DB) *App {
@@ -55,7 +55,7 @@ func (a *App) wire(gdb *gorm.DB) {
 	a.db = gdb
 	db.Set(gdb)
 	pointsSvc := points.NewService(gdb)
-	settingsSvc := settings.NewService(gdb)
+	settingsSvc := config.NewSettingsStore(gdb)
 	domainSvc := domain.NewService(gdb, a.cfg)
 	a.auth = auth.NewService(gdb, a.cfg)
 	a.domain = domainSvc
@@ -115,7 +115,7 @@ func NewRouter(cfg *config.Config, gdb *gorm.DB) *gin.Engine {
 		api.POST("/pay/alipay/notify", app.requireInstalled, app.handleAlipayNotify)
 		api.POST("/pay/alipay/mock", app.requireInstalled, app.handleAlipayMock)
 
-		authg := api.Group("", app.requireInstalled, middleware.BearerAuth(cfg))
+		authg := api.Group("", app.requireInstalled, BearerAuth(cfg))
 		{
 			authg.GET("/auth/me", app.handleMe)
 			authg.PUT("/auth/password", app.handleChangePassword)
@@ -136,7 +136,7 @@ func NewRouter(cfg *config.Config, gdb *gorm.DB) *gin.Engine {
 			authg.GET("/pay/orders", app.handleMyOrders)
 			authg.GET("/pay/orders/:out_trade_no", app.handleGetOrder)
 
-			adminG := authg.Group("/admin", middleware.AdminOnly())
+			adminG := authg.Group("/admin", AdminOnly())
 			{
 				adminG.GET("/users", app.handleAdminUsers)
 				adminG.PUT("/users/:id", app.handleAdminUpdateUser)
@@ -174,7 +174,7 @@ func NewRouter(cfg *config.Config, gdb *gorm.DB) *gin.Engine {
 			fileServer := http.FileServer(http.FS(sub))
 			r.NoRoute(func(c *gin.Context) {
 				if strings.HasPrefix(c.Request.URL.Path, "/api") {
-					response.NotFound(c, "not found")
+					NotFound(c, "not found")
 					return
 				}
 				path := strings.TrimPrefix(c.Request.URL.Path, "/")
@@ -197,7 +197,7 @@ func NewRouter(cfg *config.Config, gdb *gorm.DB) *gin.Engine {
 	}
 	r.NoRoute(func(c *gin.Context) {
 		if strings.HasPrefix(c.Request.URL.Path, "/api") {
-			response.NotFound(c, "not found")
+			NotFound(c, "not found")
 			return
 		}
 		c.String(http.StatusOK, "TuDNS API is running. Run the frontend production build.")
@@ -232,7 +232,7 @@ func securityHeaders() gin.HandlerFunc {
 
 func (a *App) requireInstalled(c *gin.Context) {
 	if !a.cfg.IsInstalled() || db.Get() == nil {
-		response.Fail(c, http.StatusServiceUnavailable, 503, "系统未安装")
+		Fail(c, http.StatusServiceUnavailable, 503, "系统未安装")
 		c.Abort()
 		return
 	}
@@ -240,45 +240,45 @@ func (a *App) requireInstalled(c *gin.Context) {
 }
 
 func (a *App) handleInstallStatus(c *gin.Context) {
-	response.OK(c, a.install.Status())
+	OK(c, a.install.Status())
 }
 
 func (a *App) handleInstallTestDB(c *gin.Context) {
 	if a.cfg.IsInstalled() {
-		response.BadRequest(c, "系统已安装")
+		BadRequest(c, "系统已安装")
 		return
 	}
 	var req install.InstallRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "参数错误")
+		BadRequest(c, "参数错误")
 		return
 	}
 	if err := a.install.TestDB(req.Driver, req.DSN, req.SQLitePath); err != nil {
-		response.BadRequest(c, err.Error())
+		BadRequest(c, err.Error())
 		return
 	}
-	response.OK(c, gin.H{"ok": true})
+	OK(c, gin.H{"ok": true})
 }
 
 func (a *App) handleInstall(c *gin.Context) {
 	if a.cfg.IsInstalled() {
-		response.BadRequest(c, "系统已安装")
+		BadRequest(c, "系统已安装")
 		return
 	}
 	var req install.InstallRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "参数错误")
+		BadRequest(c, "参数错误")
 		return
 	}
 	if err := a.install.Install(req); err != nil {
-		response.BadRequest(c, err.Error())
+		BadRequest(c, err.Error())
 		return
 	}
 	gdb, err := install.OpenInstalled(a.cfg)
 	if err != nil {
-		response.ServerError(c, err.Error())
+		ServerError(c, err.Error())
 		return
 	}
 	a.wire(gdb)
-	response.OK(c, gin.H{"installed": true})
+	OK(c, gin.H{"installed": true})
 }

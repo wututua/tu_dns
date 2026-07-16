@@ -11,4 +11,4 @@
 | [运维](operations.md) | 运维 | 启停、健康和回滚 |
 | [故障排查](troubleshooting.md) | 开发者、运维 | 症状到修复 |
 
-用户入口文档位于仓库根目录：[安装](../INSTALL.md)、[使用](../USAGE.md)、[API](../API.md)、[部署](../DEPLOY.md)、[配置](../ENV_VARS.md)。
+用户入口文档在 [安装](install.md)、[使用](usage.md)、[API](api.md)、[部署](deploy.md)、[配置](env-vars.md)。

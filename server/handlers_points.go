@@ -3,20 +3,20 @@ package server
 import (
 	"strconv"
 
-	"tudns/middleware"
-	"tudns/response"
+
+
 
 	"github.com/gin-gonic/gin"
 )
 
 func (a *App) handleMyPoints(c *gin.Context) {
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
-	items, total, err := a.points.List(middleware.CurrentUserID(c), page, 20)
+	items, total, err := a.points.List(CurrentUserID(c), page, 20)
 	if err != nil {
-		response.ServerError(c, err.Error())
+		ServerError(c, err.Error())
 		return
 	}
-	response.OK(c, gin.H{"items": items, "total": total, "page": page})
+	OK(c, gin.H{"items": items, "total": total, "page": page})
 }
 
 func (a *App) handleRedeem(c *gin.Context) {
@@ -24,13 +24,13 @@ func (a *App) handleRedeem(c *gin.Context) {
 		Code string `json:"code"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "参数错误")
+		BadRequest(c, "参数错误")
 		return
 	}
-	gained, err := a.redeem.Redeem(middleware.CurrentUserID(c), req.Code)
+	gained, err := a.redeem.Redeem(CurrentUserID(c), req.Code)
 	if err != nil {
-		response.BadRequest(c, err.Error())
+		BadRequest(c, err.Error())
 		return
 	}
-	response.OK(c, gin.H{"gained": gained})
+	OK(c, gin.H{"gained": gained})
 }

@@ -1,4 +1,4 @@
-package middleware
+package server
 
 import (
 	"strings"
@@ -7,7 +7,6 @@ import (
 	"tudns/config"
 	"tudns/db"
 	"tudns/models"
-	"tudns/response"
 
 	"github.com/gin-gonic/gin"
 )
@@ -22,31 +21,31 @@ func BearerAuth(cfg *config.Config) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		gdb := db.Get()
 		if gdb == nil {
-			response.Fail(c, 503, 503, "系统未安装")
+			Fail(c, 503, 503, "系统未安装")
 			c.Abort()
 			return
 		}
 		h := c.GetHeader("Authorization")
 		if h == "" || !strings.HasPrefix(h, "Bearer ") {
-			response.Unauthorized(c, "未登录")
+			Unauthorized(c, "未登录")
 			c.Abort()
 			return
 		}
 		token := strings.TrimSpace(strings.TrimPrefix(h, "Bearer "))
 		claims, err := auth.ParseToken(cfg.Security.SecretKey, token)
 		if err != nil {
-			response.Unauthorized(c, "登录已失效")
+			Unauthorized(c, "登录已失效")
 			c.Abort()
 			return
 		}
 		var u models.User
 		if err := gdb.First(&u, claims.UserID).Error; err != nil {
-			response.Unauthorized(c, "用户不存圀")
+			Unauthorized(c, "用户不存在")
 			c.Abort()
 			return
 		}
 		if u.Status != models.UserStatusActive {
-			response.Forbidden(c, "用户已禁用")
+			Forbidden(c, "用户已禁用")
 			c.Abort()
 			return
 		}
@@ -61,7 +60,7 @@ func AdminOnly() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		role, _ := c.Get(CtxRole)
 		if role != models.RoleAdmin {
-			response.Forbidden(c, "需要管理员权限")
+			Forbidden(c, "需要管理员权限")
 			c.Abort()
 			return
 		}

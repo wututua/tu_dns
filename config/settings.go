@@ -1,4 +1,4 @@
-package settings
+package config
 
 import (
 	"tudns/models"
@@ -7,15 +7,15 @@ import (
 	"gorm.io/gorm/clause"
 )
 
-type Service struct {
+type SettingsStore struct {
 	db *gorm.DB
 }
 
-func NewService(db *gorm.DB) *Service {
-	return &Service{db: db}
+func NewSettingsStore(db *gorm.DB) *SettingsStore {
+	return &SettingsStore{db: db}
 }
 
-func (s *Service) Get(key string) (string, error) {
+func (s *SettingsStore) Get(key string) (string, error) {
 	var item models.Setting
 	if err := s.db.Where("key = ?", key).First(&item).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
@@ -26,7 +26,7 @@ func (s *Service) Get(key string) (string, error) {
 	return item.Value, nil
 }
 
-func (s *Service) Set(key, value string) error {
+func (s *SettingsStore) Set(key, value string) error {
 	item := models.Setting{Key: key, Value: value}
 	return s.db.Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "key"}},
@@ -34,7 +34,7 @@ func (s *Service) Set(key, value string) error {
 	}).Create(&item).Error
 }
 
-func (s *Service) GetAll() (map[string]string, error) {
+func (s *SettingsStore) GetAll() (map[string]string, error) {
 	var items []models.Setting
 	if err := s.db.Find(&items).Error; err != nil {
 		return nil, err

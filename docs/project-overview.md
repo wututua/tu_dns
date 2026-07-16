@@ -122,7 +122,7 @@ graph TB
 
 ## Runtime Contracts
 
-HTTP 合约见 [API.md](../API.md)，配置见 [ENV_VARS.md](../ENV_VARS.md)，安装与数据持久化见 [data-storage.md](data-storage.md)。应用仅支持一个进程入口，不提供后台任务或消息队列。
+HTTP 合约见 [api.md](api.md)，配置见 [env-vars.md](env-vars.md)，安装与数据持久化见 [data-storage.md](data-storage.md)。应用仅支持一个进程入口，不提供后台任务或消息队列。
 
 **Section Sources**
 - [main.go](file://cmd/server/main.go) - line range not verified

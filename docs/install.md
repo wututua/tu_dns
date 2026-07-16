@@ -65,4 +65,4 @@ curl http://127.0.0.1:8080/readyz
 
 `/healthz` 表示 HTTP 进程存活；未安装时 `/readyz` 返回 HTTP 200 和 `ready:false`，数据库异常时返回 HTTP 503。
 
-更多信息见 [部署](DEPLOY.md)、[配置](ENV_VARS.md) 和 [故障排查](docs/troubleshooting.md)。
+更多信息见 [部署](deploy.md)、[配置](env-vars.md) 和 [故障排查](troubleshooting.md)。

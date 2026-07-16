@@ -40,4 +40,4 @@ cd frontend && npm run build        # 写入嵌入资源目录
 ./scripts/build.ps1                 # Windows 单二进制构建
 ```
 
-API 调用方式见 [API.md](API.md)，Provider 验证要求见 [docs/dns-providers.md](docs/dns-providers.md)。
+API 调用方式见 [api.md](api.md)，Provider 验证要求见 [dns-providers.md](dns-providers.md)。
