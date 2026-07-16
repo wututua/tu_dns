@@ -59,7 +59,7 @@ func (s *Service) Get(id uint) (*models.Domain, error) {
 func (s *Service) Save(id uint, in SaveInput) (*models.Domain, error) {
 	name := strings.ToLower(strings.TrimSpace(in.Name))
 	if name == "" || in.ProviderKey == "" {
-		return nil, errors.New("域名咀DNS 平台必填")
+		return nil, errors.New("域名和DNS平台必填")
 	}
 	if in.RecordTypes == "" {
 		in.RecordTypes = "A,AAAA,CNAME,TXT"

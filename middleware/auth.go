@@ -22,20 +22,20 @@ func BearerAuth(cfg *config.Config) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		gdb := db.Get()
 		if gdb == nil {
-			response.Fail(c, 503, 503, "系统未安裀")
+			response.Fail(c, 503, 503, "系统未安装")
 			c.Abort()
 			return
 		}
 		h := c.GetHeader("Authorization")
 		if h == "" || !strings.HasPrefix(h, "Bearer ") {
-			response.Unauthorized(c, "未登彀")
+			response.Unauthorized(c, "未登录")
 			c.Abort()
 			return
 		}
 		token := strings.TrimSpace(strings.TrimPrefix(h, "Bearer "))
 		claims, err := auth.ParseToken(cfg.Security.SecretKey, token)
 		if err != nil {
-			response.Unauthorized(c, "登录已失敀")
+			response.Unauthorized(c, "登录已失效")
 			c.Abort()
 			return
 		}
@@ -46,7 +46,7 @@ func BearerAuth(cfg *config.Config) gin.HandlerFunc {
 			return
 		}
 		if u.Status != models.UserStatusActive {
-			response.Forbidden(c, "用户已禁甀")
+			response.Forbidden(c, "用户已禁用")
 			c.Abort()
 			return
 		}
