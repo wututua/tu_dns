@@ -9,6 +9,8 @@
 /bin/
 /dist/
 *.exe
+*.test
+*.test.exe
 /webembed/dist/*
 !/webembed/dist/.gitkeep
 
@@ -16,12 +18,31 @@
 /frontend/node_modules/
 /frontend/tsconfig.tsbuildinfo
 /frontend/dist/
+/frontend/.vite/
 /web/
 
 # Editor and operating system files
 .DS_Store
+Thumbs.db
 .idea/
 .vscode/
+*~
+*.swp
+*.swo
+
+# Environment and secrets
+.env
+.env.*
+*.pem
+*.key
+
+# Temporary files
+*.tmp
+*.temp
+
+# Go workspace (team-shared, not local)
+go.work
+go.work.sum
 
 # Logs and local automation state
 *.log
