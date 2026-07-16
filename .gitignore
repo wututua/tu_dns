@@ -1,0 +1,28 @@
+# Runtime data and local configuration
+/data/
+/config.yaml
+*.db
+*.db-shm
+*.db-wal
+
+# Build outputs
+/bin/
+/dist/
+*.exe
+/webembed/dist/*
+!/webembed/dist/.gitkeep
+
+# Frontend dependencies and caches
+/frontend/node_modules/
+/frontend/tsconfig.tsbuildinfo
+/frontend/dist/
+/web/
+
+# Editor and operating system files
+.DS_Store
+.idea/
+.vscode/
+
+# Logs and local automation state
+*.log
+/.opencode/state/
