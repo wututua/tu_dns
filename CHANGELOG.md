@@ -16,9 +16,9 @@
 ### Changed
 
 - 前端源码从 `web/` 迁移到常见的 `frontend/` 目录。
-- Vite 构建直接输出到 `internal/webembed/dist/`，移除手工复制步骤。
-- 仓库采用 `cmd/`、`internal/`、`frontend/`、`docs/`、`scripts/`、`.github/` 布局。
+- Vite 构建直接输出到 `webembed/dist/`，移除手工复制步骤。
 
+- 仓库采用 flat Go 布局，配合 `frontend/`、`docs/`、`scripts/`、`.github/` 分区。
 ### Known limitations
 
 - Provider 仍需真实凭据端到端联调。

@@ -10,7 +10,7 @@
 
 ```bash
 go mod download
-go run ./cmd/server
+go run .
 ```
 
 另开终端：
@@ -40,10 +40,10 @@ cd frontend
 npm ci
 npm run build
 cd ..
-go build -trimpath -o bin/tudns ./cmd/server
+go build -trimpath -o bin/tudns .
 ```
 
-Vite 直接清空并写入 `internal/webembed/dist/`，因此必须先构建前端，再构建 Go 二进制。
+Vite 直接清空并写入 `webembed/dist/`，因此必须先构建前端，再构建 Go 二进制。
 
 ## 首次安装
 
