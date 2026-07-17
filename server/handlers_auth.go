@@ -3,8 +3,6 @@ package server
 import (
 	"tudns/auth"
 
-
-
 	"github.com/gin-gonic/gin"
 )
 

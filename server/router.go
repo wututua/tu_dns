@@ -19,7 +19,6 @@ import (
 	"tudns/record"
 	"tudns/redeem"
 
-
 	"tudns/webembed"
 
 	"github.com/gin-gonic/gin"

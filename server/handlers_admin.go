@@ -10,7 +10,6 @@ import (
 
 	"tudns/payment/alipay"
 
-
 	"github.com/gin-gonic/gin"
 )
 

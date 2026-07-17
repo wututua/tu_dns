@@ -16,9 +16,9 @@ import (
 	"strings"
 	"time"
 
+	"tudns/config"
 	"tudns/models"
 	"tudns/points"
-	"tudns/config"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"

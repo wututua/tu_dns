@@ -8,10 +8,10 @@ import (
 	"time"
 
 	"tudns/config"
+	"tudns/crypto"
 	"tudns/dns"
 	_ "tudns/dns/providers"
 	"tudns/models"
-	"tudns/crypto"
 
 	"gorm.io/gorm"
 )
