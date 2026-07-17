@@ -5,12 +5,17 @@ import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import Dashboard from "./pages/Dashboard";
 import DomainsPage from "./pages/DomainsPage";
+import MyDnsPage from "./pages/MyDnsPage";
+import NotificationsPage from "./pages/NotificationsPage";
 import PointsPage from "./pages/PointsPage";
 import AdminUsers from "./pages/admin/AdminUsers";
 import AdminDomains from "./pages/admin/AdminDomains";
 import AdminRedeem from "./pages/admin/AdminRedeem";
 import AdminOrders from "./pages/admin/AdminOrders";
 import AdminSettings from "./pages/admin/AdminSettings";
+import AdminLogs from "./pages/admin/AdminLogs";
+import AdminWebhooks from "./pages/admin/AdminWebhooks";
+import ApiKeysPage from "./pages/ApiKeysPage";
 import Layout from "./components/Layout";
 import { useEffect, useState } from "react";
 import { api } from "./lib/api";
@@ -64,6 +69,9 @@ export default function App() {
       >
         <Route index element={<Dashboard />} />
         <Route path="domains" element={<DomainsPage />} />
+        <Route path="mydns" element={<MyDnsPage />} />
+        <Route path="notifications" element={<NotificationsPage />} />
+        <Route path="api-keys" element={<ApiKeysPage />} />
         <Route path="points" element={<PointsPage />} />
         <Route
           path="admin/users"
@@ -102,6 +110,22 @@ export default function App() {
           element={
             <RequireAdmin>
               <AdminSettings />
+            </RequireAdmin>
+          }
+        />
+        <Route
+          path="admin/logs"
+          element={
+            <RequireAdmin>
+              <AdminLogs />
+            </RequireAdmin>
+          }
+        />
+        <Route
+          path="admin/webhooks"
+          element={
+            <RequireAdmin>
+              <AdminWebhooks />
             </RequireAdmin>
           }
         />

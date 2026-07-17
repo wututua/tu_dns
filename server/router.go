@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strings"
 	"sync"
+	"time"
 
 	"tudns/admin"
 	"tudns/auth"
@@ -14,10 +15,12 @@ import (
 	"tudns/domain"
 	"tudns/install"
 
+	"tudns/notification"
 	"tudns/payment/alipay"
 	"tudns/points"
 	"tudns/record"
 	"tudns/redeem"
+	"tudns/webhook"
 
 	"tudns/webembed"
 
@@ -26,18 +29,21 @@ import (
 )
 
 type App struct {
-	mu       sync.RWMutex
-	cfg      *config.Config
-	db       *gorm.DB
-	auth     *auth.Service
-	install  *install.Service
-	domain   *domain.Service
-	record   *record.Service
-	points   *points.Service
-	redeem   *redeem.Service
-	alipay   *alipay.Service
-	admin    *admin.Service
-	settings *config.SettingsStore
+	mu           sync.RWMutex
+	cfg          *config.Config
+	db           *gorm.DB
+	auth         *auth.Service
+	install      *install.Service
+	domain       *domain.Service
+	record       *record.Service
+	points       *points.Service
+	redeem       *redeem.Service
+	alipay       *alipay.Service
+	admin        *admin.Service
+	settings     *config.SettingsStore
+	notification *notification.Service
+	webhook      *webhook.Service
+	apikey       *auth.ApiKeyService
 }
 
 func NewApp(cfg *config.Config, gdb *gorm.DB) *App {
@@ -63,6 +69,9 @@ func (a *App) wire(gdb *gorm.DB) {
 	a.redeem = redeem.NewService(gdb, pointsSvc)
 	a.alipay = alipay.NewService(gdb, pointsSvc, settingsSvc)
 	a.admin = admin.NewService(gdb, pointsSvc)
+	a.notification = notification.NewService(gdb)
+	a.webhook = webhook.NewService(gdb)
+	a.apikey = auth.NewApiKeyService(gdb)
 	a.settings = settingsSvc
 }
 
@@ -75,6 +84,14 @@ func NewRouter(cfg *config.Config, gdb *gorm.DB) *gin.Engine {
 
 	r := gin.New()
 	r.Use(gin.Recovery(), gin.Logger(), corsMiddleware(cfg), securityHeaders())
+	if cfg.Rate.Enabled && cfg.Rate.Limit > 0 {
+		interval := time.Duration(cfg.Rate.Interval) * time.Second
+		if interval <= 0 {
+			interval = 60 * time.Second
+		}
+		rl := NewRateLimiter(cfg.Rate.Limit, interval)
+		r.Use(rl.Middleware())
+	}
 
 	app := NewApp(cfg, gdb)
 
@@ -119,6 +136,15 @@ func NewRouter(cfg *config.Config, gdb *gorm.DB) *gin.Engine {
 			authg.GET("/auth/me", app.handleMe)
 			authg.PUT("/auth/password", app.handleChangePassword)
 
+			authg.GET("/api-keys", app.handleListApiKeys)
+			authg.POST("/api-keys", app.handleCreateApiKey)
+			authg.DELETE("/api-keys/:id", app.handleRevokeApiKey)
+
+			authg.GET("/notifications", app.handleListNotifications)
+			authg.GET("/notifications/unread", app.handleUnreadCount)
+			authg.PUT("/notifications/:id/read", app.handleMarkRead)
+			authg.PUT("/notifications/read-all", app.handleMarkAllRead)
+
 			authg.GET("/subdomains", app.handleMySubdomains)
 			authg.POST("/subdomains/bundle", app.handleCreateBundle)
 			authg.DELETE("/subdomains/:id", app.handleDeleteSubdomain)
@@ -162,6 +188,14 @@ func NewRouter(cfg *config.Config, gdb *gorm.DB) *gin.Engine {
 				adminG.GET("/pay/alipay/config", app.handleAdminGetAlipay)
 				adminG.PUT("/pay/alipay/config", app.handleAdminSaveAlipay)
 				adminG.GET("/pay/orders", app.handleAdminOrders)
+
+				adminG.GET("/webhooks", app.handleAdminWebhooks)
+				adminG.POST("/webhooks", app.handleAdminCreateWebhook)
+				adminG.PUT("/webhooks/:id", app.handleAdminUpdateWebhook)
+				adminG.DELETE("/webhooks/:id", app.handleAdminDeleteWebhook)
+
+				adminG.GET("/api-keys", app.handleAdminListApiKeys)
+				adminG.DELETE("/api-keys/:id", app.handleAdminRevokeApiKey)
 			}
 		}
 	}

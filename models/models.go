@@ -49,20 +49,26 @@ type Domain struct {
 	RecordTypes      string    `gorm:"size:255;not null;default:A,AAAA,CNAME,TXT" json:"record_types"`
 	PointsCost       int64     `gorm:"not null;default:0" json:"points_cost"`
 	Description      string    `gorm:"size:512" json:"description"`
+	SubdomainTTLDays int       `gorm:"not null;default:0" json:"subdomain_ttl_days"`
 	Status           int       `gorm:"not null;default:1" json:"status"`
 	CreatedAt        time.Time `json:"created_at"`
 	UpdatedAt        time.Time `json:"updated_at"`
 }
 
 type Subdomain struct {
-	ID         uint      `gorm:"primaryKey" json:"id"`
-	UserID     uint      `gorm:"index;not null" json:"user_id"`
-	DomainID   uint      `gorm:"index;not null" json:"domain_id"`
-	Name       string    `gorm:"size:128;not null" json:"name"`
-	FullDomain string    `gorm:"size:255;uniqueIndex;not null" json:"full_domain"`
-	Status     int       `gorm:"not null;default:1" json:"status"`
-	CreatedAt  time.Time `json:"created_at"`
-	UpdatedAt  time.Time `json:"updated_at"`
+	ID         uint       `gorm:"primaryKey" json:"id"`
+	UserID     uint       `gorm:"index;not null" json:"user_id"`
+	DomainID   uint       `gorm:"index;not null" json:"domain_id"`
+	Name       string     `gorm:"size:128;not null" json:"name"`
+	FullDomain string     `gorm:"size:255;uniqueIndex;not null" json:"full_domain"`
+	Status     int        `gorm:"not null;default:1" json:"status"`
+	ExpiresAt  *time.Time `json:"expires_at"`
+	CreatedAt  time.Time  `json:"created_at"`
+	UpdatedAt  time.Time  `json:"updated_at"`
+}
+
+func (s *Subdomain) IsExpired() bool {
+	return s.ExpiresAt != nil && s.ExpiresAt.Before(time.Now()) && s.Status == SubdomainStatusActive
 }
 
 type Record struct {
@@ -133,6 +139,40 @@ type Setting struct {
 	UpdatedAt time.Time `json:"updated_at"`
 }
 
+type Notification struct {
+	ID        uint      `gorm:"primaryKey" json:"id"`
+	UserID    uint      `gorm:"index;not null" json:"user_id"`
+	Title     string    `gorm:"size:255;not null" json:"title"`
+	Content   string    `gorm:"type:text" json:"content"`
+	Read      bool      `gorm:"not null;default:false" json:"read"`
+	Link      string    `gorm:"size:512" json:"link"`
+	CreatedAt time.Time `json:"created_at"`
+}
+
+type Webhook struct {
+	ID        uint      `gorm:"primaryKey" json:"id"`
+	Name      string    `gorm:"size:128;not null" json:"name"`
+	URL       string    `gorm:"size:1024;not null" json:"url"`
+	Events    string    `gorm:"size:512;not null" json:"events"`
+	Secret    string    `gorm:"size:255" json:"-"`
+	Enabled   bool      `gorm:"not null;default:true" json:"enabled"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+}
+
+type ApiKey struct {
+	ID          uint       `gorm:"primaryKey" json:"id"`
+	UserID      uint       `gorm:"index;not null" json:"user_id"`
+	Name        string     `gorm:"size:128;not null" json:"name"`
+	KeyPrefix   string     `gorm:"size:16;not null" json:"key_prefix"`
+	KeyHash     string     `gorm:"size:255;not null" json:"-"`
+	LastUsedAt  *time.Time `json:"last_used_at"`
+	LastIP      string     `gorm:"size:64" json:"last_ip"`
+	Enabled     bool       `gorm:"not null;default:true" json:"enabled"`
+	CreatedAt   time.Time  `json:"created_at"`
+	UpdatedAt   time.Time  `json:"updated_at"`
+}
+
 type OperationLog struct {
 	ID         uint      `gorm:"primaryKey" json:"id"`
 	UserID     uint      `gorm:"index" json:"user_id"`
@@ -157,5 +197,8 @@ func AllModels() []interface{} {
 		&PaymentOrder{},
 		&Setting{},
 		&OperationLog{},
+		&Notification{},
+		&Webhook{},
+		&ApiKey{},
 	}
 }

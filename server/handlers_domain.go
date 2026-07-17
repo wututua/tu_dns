@@ -36,6 +36,9 @@ func (a *App) handleCreateBundle(c *gin.Context) {
 		return
 	}
 	a.admin.WriteLog(uid, 0, "create_bundle", "subdomain", strconv.FormatUint(uint64(res.Subdomain.ID), 10), c.ClientIP(), res.Subdomain.FullDomain)
+	if a.webhook != nil {
+		a.webhook.Dispatch("subdomain.created", res)
+	}
 	OK(c, res)
 }
 
@@ -55,6 +58,9 @@ func (a *App) handleDeleteSubdomain(c *gin.Context) {
 	if err := a.record.DeleteSubdomain(uid, uint(id), role == "admin"); err != nil {
 		BadRequest(c, err.Error())
 		return
+	}
+	if a.webhook != nil {
+		a.webhook.Dispatch("record.deleted", gin.H{"record_id": c.Param("id")})
 	}
 	OK(c, gin.H{"ok": true})
 }
@@ -81,6 +87,9 @@ func (a *App) handleAddRecord(c *gin.Context) {
 		BadRequest(c, err.Error())
 		return
 	}
+	if a.webhook != nil {
+		a.webhook.Dispatch("record.created", gin.H{"record": rec})
+	}
 	OK(c, gin.H{"record": rec, "charged": charged})
 }
 
@@ -97,6 +106,9 @@ func (a *App) handleUpdateRecord(c *gin.Context) {
 	if err != nil {
 		BadRequest(c, err.Error())
 		return
+	}
+	if a.webhook != nil {
+		a.webhook.Dispatch("record.updated", rec)
 	}
 	OK(c, rec)
 }

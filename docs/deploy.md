@@ -6,6 +6,18 @@
 
 ## 生产基线
 
+### 制品清单
+
+| 制品 | 说明 |
+| --- | --- |
+| `bin/tudns*` | 不可变发布产物 |
+| `config.yaml` | 部署配置与主密钥 |
+| `data/database.yaml` | 安装生成的数据库参数 |
+| `data/install.lock` | 安装完成标记 |
+| 数据库 | 业务事实源 |
+
+### 部署步骤
+
 1. 创建非 root 服务账号和持久化数据目录。
 2. 将二进制与独立 `config.yaml` 放入部署目录。
 3. 生成高熵 `security.secret_key`，限制 CORS Origin。
@@ -26,6 +38,45 @@ Windows PowerShell：
 $env:TUDNS_CONFIG = "C:\ProgramData\TuDNS\config.yaml"
 & "C:\Program Files\TuDNS\tudns.exe"
 ```
+
+## 进程生命周期
+
+进程在 SIGINT/SIGTERM 后给 HTTP 15 秒关闭时间，再关闭数据库连接。
+
+HTTP Server 超时配置：
+- 读取头超时：10 秒
+- 读取超时：30 秒
+- 写入超时：60 秒
+- 空闲超时：120 秒
+
+启动日志包含监听地址和安装状态。
+
+## 平台注意事项
+
+### Windows
+
+- 使用 `scripts/build.ps1` 构建 `bin/tudns.exe`。
+- PowerShell 执行策略可能阻止本地脚本，可在组织安全策略允许的范围内调用该脚本。
+- `0600` 文件权限不等同于 NTFS ACL，需显式限制 `data/` 和配置文件权限。
+- Go `-race` 需要 CGO 和可用 C 编译器；缺少编译器时普通测试仍可执行，但不能视为完成竞态验证。
+
+### Linux 与 macOS
+
+- `scripts/build.sh` 使用 POSIX `sh`。
+- 首次从不保留可执行位的介质获取脚本时，可使用 `sh scripts/build.sh`。
+- 建议以非 root 专用账号运行，并让该账号只写 `data/`。
+
+### 数据库
+
+- SQLite 适合单实例和轻量部署，代码启用 WAL。
+- MySQL/PostgreSQL 需要预先准备空数据库和网络连接。
+- 应通过私网或 TLS 访问远程数据库；仓库没有提供数据库服务器或 TLS 自动配置。
+
+### DNS 与支付外部依赖
+
+- DNS Provider 联调需要公网访问服务商 API 和最小权限测试凭据。
+- 支付宝生产联调需要公网 HTTPS 通知地址。
+- 仓库未提供 Dockerfile、Kubernetes 清单、Nginx 配置或证书自动化，这些需由部署环境单独管理。
 
 ## 健康检查
 
@@ -55,6 +106,13 @@ $env:TUDNS_CONFIG = "C:\ProgramData\TuDNS\config.yaml"
 - 纯前端或无模型变更：停止新版本，恢复旧二进制并验证。
 - 包含模型变更：先恢复数据库备份，再恢复匹配的二进制和配置。
 - Provider 操作会改变外部 DNS 状态；回滚应用不会自动撤销已成功提交给服务商的记录变更。
+
+## 发布前验证
+
+1. 运行 `go test ./... -count=1` 与 `go vet ./...`。
+2. 前端执行 `npm ci && npm run build`。
+3. 构建后启动新二进制，检查 `/healthz`、`/readyz`、登录、数据库读写和受控 Provider CRUD。
+4. 支付验证只能在隔离商户/沙箱环境进行，不能用真实用户资金做烟雾测试。
 
 ## 监控限制
 

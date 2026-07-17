@@ -26,14 +26,15 @@ func NewService(db *gorm.DB, cfg *config.Config) *Service {
 }
 
 type SaveInput struct {
-	Name         string            `json:"name"`
-	ProviderKey  string            `json:"provider_key"`
-	RemoteZoneID string            `json:"remote_zone_id"`
-	Config       map[string]string `json:"config"`
-	RecordTypes  string            `json:"record_types"`
-	PointsCost   int64             `json:"points_cost"`
-	Description  string            `json:"description"`
-	Status       int               `json:"status"`
+	Name             string            `json:"name"`
+	ProviderKey      string            `json:"provider_key"`
+	RemoteZoneID     string            `json:"remote_zone_id"`
+	Config           map[string]string `json:"config"`
+	RecordTypes      string            `json:"record_types"`
+	PointsCost       int64             `json:"points_cost"`
+	Description      string            `json:"description"`
+	SubdomainTTLDays int               `json:"subdomain_ttl_days"`
+	Status           int               `json:"status"`
 }
 
 func (s *Service) ListPublic() ([]models.Domain, error) {
@@ -95,6 +96,7 @@ func (s *Service) Save(id uint, in SaveInput) (*models.Domain, error) {
 	d.RecordTypes = in.RecordTypes
 	d.PointsCost = in.PointsCost
 	d.Description = in.Description
+	d.SubdomainTTLDays = in.SubdomainTTLDays
 	d.Status = in.Status
 
 	if id == 0 {

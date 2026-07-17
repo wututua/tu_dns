@@ -55,6 +55,9 @@ func (a *App) handleAlipayNotify(c *gin.Context) {
 		c.String(http.StatusBadRequest, "fail")
 		return
 	}
+	if a.webhook != nil {
+		a.webhook.Dispatch("payment.completed", gin.H{"out_trade_no": form["out_trade_no"]})
+	}
 	c.String(http.StatusOK, "success")
 }
 

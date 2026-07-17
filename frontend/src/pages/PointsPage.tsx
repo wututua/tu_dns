@@ -23,19 +23,22 @@ type Order = {
 export default function PointsPage() {
   const { user, refresh } = useAuth();
   const [items, setItems] = useState<Ledger[]>([]);
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
   const [code, setCode] = useState("");
   const [amount, setAmount] = useState(10);
   const [msg, setMsg] = useState("");
   const [err, setErr] = useState("");
 
-  const load = async () => {
-    const data = await api<{ items: Ledger[] }>("/api/points?page=1");
+  const load = async (p: number) => {
+    const data = await api<{ items: Ledger[]; total: number }>(`/api/points?page=${p}`);
     setItems(data.items || []);
+    setTotal(data.total || 0);
   };
 
   useEffect(() => {
-    load().catch((e) => setErr(e.message));
-  }, []);
+    load(page).catch((e) => setErr(e.message));
+  }, [page]);
 
   const redeem = async (e: FormEvent) => {
     e.preventDefault();
@@ -49,7 +52,7 @@ export default function PointsPage() {
       setMsg(`兑换成功 +${res.gained}`);
       setCode("");
       await refresh();
-      await load();
+      await load(page);
     } catch (ex) {
       setErr(ex instanceof Error ? ex.message : "兑换失败");
     }
@@ -71,7 +74,7 @@ export default function PointsPage() {
         });
         setMsg(`模拟支付成功，到账 ${order.points} 积分`);
         await refresh();
-        await load();
+        await load(page);
       } else if (order.pay_url) {
         window.open(order.pay_url, "_blank");
         setMsg("已打开支付页面，完成支付后刷新积分");
@@ -145,6 +148,18 @@ export default function PointsPage() {
           </tbody>
         </table>
       </div>
+
+      {Math.ceil(total / 20) > 1 && (
+        <div className="flex items-center justify-center gap-2">
+          <button className="btn-ghost" disabled={page <= 1} onClick={() => setPage(page - 1)}>
+            上一页
+          </button>
+          <span className="muted text-sm">{page} / {Math.ceil(total / 20)}</span>
+          <button className="btn-ghost" disabled={page >= Math.ceil(total / 20)} onClick={() => setPage(page + 1)}>
+            下一页
+          </button>
+        </div>
+      )}
     </div>
   );
 }

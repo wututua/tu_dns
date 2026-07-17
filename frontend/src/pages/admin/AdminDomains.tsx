@@ -15,6 +15,7 @@ type Domain = {
   points_cost: number;
   record_types: string;
   description: string;
+  subdomain_ttl_days: number;
   status: number;
 };
 
@@ -31,6 +32,7 @@ export default function AdminDomains() {
   const [cost, setCost] = useState(10);
   const [types, setTypes] = useState("A,AAAA,CNAME,TXT");
   const [desc, setDesc] = useState("");
+  const [subdomainTTL, setSubdomainTTL] = useState(0);
   const [status, setStatus] = useState(1);
   const [msg, setMsg] = useState("");
   const [err, setErr] = useState("");
@@ -63,6 +65,7 @@ export default function AdminDomains() {
     setCost(10);
     setTypes("A,AAAA,CNAME,TXT");
     setDesc("");
+    setSubdomainTTL(0);
     setStatus(1);
     setMsg("");
     setErr("");
@@ -85,6 +88,7 @@ export default function AdminDomains() {
     setCost(d.points_cost);
     setTypes(d.record_types);
     setDesc(d.description);
+    setSubdomainTTL(d.subdomain_ttl_days);
     setStatus(d.status);
     setMsg("");
     setErr("");
@@ -124,6 +128,7 @@ export default function AdminDomains() {
         record_types: types,
         points_cost: cost,
         description: desc,
+        subdomain_ttl_days: subdomainTTL,
         status,
       };
       if (!editId || Object.keys(config).length > 0) {
@@ -247,6 +252,10 @@ export default function AdminDomains() {
                   <option value={1}>启用</option>
                   <option value={0}>禁用</option>
                 </select>
+              </div>
+              <div>
+                <label className="label">子域有效期（天，0=永不过期）</label>
+                <input className="input" type="number" min={0} value={subdomainTTL} onChange={(e) => setSubdomainTTL(Number(e.target.value))} />
               </div>
               <div className="md:col-span-2">
                 <label className="label">说明</label>

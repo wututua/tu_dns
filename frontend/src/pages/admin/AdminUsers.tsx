@@ -18,6 +18,8 @@ const statusLabel = (s: number) => (s === 1 ? "正常" : "封禁");
 
 export default function AdminUsers() {
   const [items, setItems] = useState<User[]>([]);
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
   const [err, setErr] = useState("");
   const [msg, setMsg] = useState("");
 
@@ -32,13 +34,14 @@ export default function AdminUsers() {
   const [eStatus, setEStatus] = useState(1);
   const [eDelta, setEDelta] = useState(0);
 
-  const load = async () => {
-    const data = await api<{ items: User[] }>("/api/admin/users?page=1");
+  const load = async (p: number) => {
+    const data = await api<{ items: User[]; total: number }>(`/api/admin/users?page=${p}`);
     setItems(data.items || []);
+    setTotal(data.total || 0);
   };
 
   useEffect(() => {
-    load().catch((e) => setErr(e.message));
+    load(page).catch((e) => setErr(e.message));
     const closer = () => setOpenMenu(0);
     document.addEventListener("click", closer);
     return () => document.removeEventListener("click", closer);
@@ -81,7 +84,7 @@ export default function AdminUsers() {
       }
       setMsg("已保存");
       setEdit(null);
-      await load();
+      await load(page);
     } catch (ex) {
       setErr(ex instanceof Error ? ex.message : "保存失败");
     }
@@ -95,7 +98,7 @@ export default function AdminUsers() {
         method: "PUT",
         body: JSON.stringify({ status: newStatus }),
       });
-      await load();
+      await load(page);
     } catch (ex) {
       setErr(ex instanceof Error ? ex.message : "操作失败");
     }
@@ -106,6 +109,8 @@ export default function AdminUsers() {
       <h1 className="text-2xl font-semibold">用户管理</h1>
       {err && <div className="error">{err}</div>}
       {msg && <div className="success">{msg}</div>}
+
+      <div className="muted text-sm">共 {total} 条</div>
 
       <table className="table">
           <thead>
@@ -160,6 +165,18 @@ export default function AdminUsers() {
             ))}
           </tbody>
         </table>
+
+      {Math.ceil(total / 20) > 1 && (
+        <div className="flex items-center justify-center gap-2">
+          <button className="btn-ghost" disabled={page <= 1} onClick={() => setPage(page - 1)}>
+            上一页
+          </button>
+          <span className="muted text-sm">{page} / {Math.ceil(total / 20)}</span>
+          <button className="btn-ghost" disabled={page >= Math.ceil(total / 20)} onClick={() => setPage(page + 1)}>
+            下一页
+          </button>
+        </div>
+      )}
 
       {/* edit modal */}
       {edit && (

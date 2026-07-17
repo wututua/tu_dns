@@ -32,20 +32,34 @@ func BearerAuth(cfg *config.Config) gin.HandlerFunc {
 			return
 		}
 		token := strings.TrimSpace(strings.TrimPrefix(h, "Bearer "))
-		claims, err := auth.ParseToken(cfg.Security.SecretKey, token)
-		if err != nil {
+		claims, jwtErr := auth.ParseToken(cfg.Security.SecretKey, token)
+		if jwtErr == nil && claims != nil {
+			var u models.User
+			if err := gdb.First(&u, claims.UserID).Error; err != nil {
+				Unauthorized(c, "用户不存在")
+				c.Abort()
+				return
+			}
+			if u.Status != models.UserStatusActive {
+				Forbidden(c, "用户已禁用")
+				c.Abort()
+				return
+			}
+			c.Set(CtxUserID, u.ID)
+			c.Set(CtxUsername, u.Username)
+			c.Set(CtxRole, u.Role)
+			c.Next()
+			return
+		}
+		apikeySvc := getApiKeyService(c)
+		if apikeySvc == nil {
 			Unauthorized(c, "登录已失效")
 			c.Abort()
 			return
 		}
-		var u models.User
-		if err := gdb.First(&u, claims.UserID).Error; err != nil {
-			Unauthorized(c, "用户不存在")
-			c.Abort()
-			return
-		}
-		if u.Status != models.UserStatusActive {
-			Forbidden(c, "用户已禁用")
+		u, err := apikeySvc.Authenticate(token)
+		if err != nil {
+			Unauthorized(c, "登录已失效")
 			c.Abort()
 			return
 		}
@@ -72,4 +86,12 @@ func CurrentUserID(c *gin.Context) uint {
 	v, _ := c.Get(CtxUserID)
 	id, _ := v.(uint)
 	return id
+}
+
+func getApiKeyService(c *gin.Context) *auth.ApiKeyService {
+	gdb := db.Get()
+	if gdb == nil {
+		return nil
+	}
+	return auth.NewApiKeyService(gdb)
 }

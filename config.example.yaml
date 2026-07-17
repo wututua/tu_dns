@@ -14,3 +14,9 @@ security:
 cors:
   allow_origins:
     - "*"
+
+# 限流配置（默认关闭）
+rate:
+  enabled: false
+  limit: 60
+  interval: 60

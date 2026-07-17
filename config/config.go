@@ -14,6 +14,13 @@ type Config struct {
 	Security SecurityConfig `yaml:"security"`
 	CORS     CORSConfig     `yaml:"cors"`
 	Database DatabaseConfig `yaml:"database"`
+	Rate     RateConfig     `yaml:"rate"`
+}
+
+type RateConfig struct {
+	Enabled  bool  `yaml:"enabled"`
+	Limit    int   `yaml:"limit"`
+	Interval int64 `yaml:"interval"` // seconds
 }
 
 type AppConfig struct {
@@ -60,6 +67,11 @@ func Default() *Config {
 			TokenTTLHours: 72,
 		},
 		CORS: CORSConfig{AllowOrigins: []string{"*"}},
+		Rate: RateConfig{
+			Enabled:  false,
+			Limit:    60,
+			Interval: 60,
+		},
 	}
 }
 

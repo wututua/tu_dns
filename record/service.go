@@ -95,9 +95,14 @@ func (s *Service) CreateBundle(userID uint, in BundleInput) (*BundleResult, erro
 		ttl = 600
 	}
 
+	var expiresAt *time.Time
+	if d.SubdomainTTLDays > 0 {
+		t := time.Now().Add(time.Duration(d.SubdomainTTLDays) * 24 * time.Hour)
+		expiresAt = &t
+	}
+
 	var result BundleResult
 	err = s.db.Transaction(func(tx *gorm.DB) error {
-		// charge once for first record (includes subdomain acquisition)
 		if d.PointsCost > 0 {
 			if _, err := s.points.Charge(tx, userID, d.PointsCost, fmt.Sprintf("申请 %s 并添劀%s 记录", full, recType)); err != nil {
 				return err
@@ -111,6 +116,7 @@ func (s *Service) CreateBundle(userID uint, in BundleInput) (*BundleResult, erro
 			Name:       name,
 			FullDomain: full,
 			Status:     models.SubdomainStatusActive,
+			ExpiresAt:  expiresAt,
 		}
 		if err := tx.Create(&sub).Error; err != nil {
 			return err
@@ -163,6 +169,14 @@ type AddRecordInput struct {
 	Line        string `json:"line"`
 }
 
+func (s *Service) checkExpired(sub *models.Subdomain) error {
+	if sub.IsExpired() {
+		s.db.Model(sub).Update("status", models.SubdomainStatusDisabled)
+		return errors.New("子域名已过期")
+	}
+	return nil
+}
+
 func (s *Service) AddRecord(userID uint, in AddRecordInput, isAdmin bool) (*models.Record, int64, error) {
 	var sub models.Subdomain
 	if err := s.db.First(&sub, in.SubdomainID).Error; err != nil {
@@ -173,6 +187,9 @@ func (s *Service) AddRecord(userID uint, in AddRecordInput, isAdmin bool) (*mode
 	}
 	if sub.Status != models.SubdomainStatusActive {
 		return nil, 0, errors.New("子域名已禁用")
+	}
+	if err := s.checkExpired(&sub); err != nil {
+		return nil, 0, err
 	}
 	d, err := s.domain.Get(sub.DomainID)
 	if err != nil {
@@ -250,6 +267,12 @@ func (s *Service) UpdateRecord(userID, recordID uint, in UpdateRecordInput, isAd
 	if !isAdmin && rec.UserID != userID {
 		return nil, errors.New("无权操作")
 	}
+	var sub models.Subdomain
+	if err := s.db.First(&sub, rec.SubdomainID).Error; err == nil {
+		if err := s.checkExpired(&sub); err != nil {
+			return nil, err
+		}
+	}
 	d, err := s.domain.Get(rec.DomainID)
 	if err != nil {
 		return nil, err
@@ -317,6 +340,12 @@ func (s *Service) DeleteRecord(userID, recordID uint, isAdmin bool) error {
 	if !isAdmin && rec.UserID != userID {
 		return errors.New("无权操作")
 	}
+	var sub models.Subdomain
+	if err := s.db.First(&sub, rec.SubdomainID).Error; err == nil {
+		if err := s.checkExpired(&sub); err != nil {
+			return err
+		}
+	}
 	d, err := s.domain.Get(rec.DomainID)
 	if err != nil {
 		return err
@@ -364,6 +393,9 @@ func (s *Service) DeleteSubdomain(userID, subID uint, isAdmin bool) error {
 	}
 	if !isAdmin && sub.UserID != userID {
 		return errors.New("无权操作")
+	}
+	if err := s.checkExpired(&sub); err != nil && !isAdmin {
+		return err
 	}
 	var records []models.Record
 	if err := s.db.Where("subdomain_id = ?", sub.ID).Find(&records).Error; err != nil {
